@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --content-height: calc(100vh - 64px);
+  --mobile-content-height: calc(100vh - 56px);
+  --mobile-padding-x: 0.75rem;
+  --mobile-padding-y: 0.5rem;
+  --desktop-padding-x: 1rem;
+  --desktop-padding-y: 0.75rem;
+}
+
+.chat-input-shadow {
+  box-shadow: var(--shadow-md);
+}
+
+.send-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.send-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.2);
+}
+
+/* Mobile optimizations */
+.mobile-header {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --content-height: var(--mobile-content-height);
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .vertical-toolbar {
+    display: none;
+  }
+
+  /* Improve touch targets on mobile */
+  button,
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Optimize scrolling performance */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+@layer base {
+  :root {
+    /* Cupertino-style color palette */
+    --background: 0 0% 100%;
+    --foreground: 210 12% 16%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 12% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 12% 16%;
+
+    /* iOS blue */
+    --primary: 211 100% 50%;
+    --primary-light: 211 100% 97%;
+    --primary-dark: 211 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* iOS light gray */
+    --secondary: 0 0% 97%; /* #F7F7F7 */
+    --secondary-light: 210 10% 94%; /* #EDEFF2 */
+    --secondary-foreground: 210 12% 16%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 211 100% 50%;
+    --accent-light: 211 100% 97%;
+    --accent-foreground: 0 0% 100%;
+
+    /* iOS red */
+    --destructive: 0 72% 51%; /* #D32F2F */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 211 100% 50%;
+
+    --brand-blue: 211 100% 50%;
+    --brand-light-blue: 211 100% 97%;
+    --brand-dark-blue: 211 100% 45%;
+    --brand-gray: 0 0% 97%; /* #F7F7F7 */
+    --brand-light-gray: 210 10% 94%; /* #EDEFF2 */
+
+    /* Cupertino-style shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+    /* Cupertino-style rounded corners */
+    --radius: 0.75rem;
+
+    /* Input field colors */
+    --input-bg-default: 0 0% 97%; /* #F7F7F7 */
+    --input-bg-active: 210 10% 94%; /* #EDEFF2 */
+    --input-bg-filled: 0 0% 97%; /* #F7F7F7 */
+    --input-bg-disabled: 0 0% 97%; /* #F7F7F7 with opacity */
+    --input-error: 0 65% 50%; /* #D32F2F */
+  }
+
+  .dark {
+    /* Cupertino dark mode colors */
+    --background: 210 12% 10%;
+    --foreground: 210 6% 93%;
+
+    --card: 210 12% 10%;
+    --card-foreground: 210 6% 93%;
+
+    --popover: 210 12% 10%;
+    --popover-foreground: 210 6% 93%;
+
+    /* iOS blue in dark mode */
+    --primary: 211 100% 60%;
+    --primary-light: 211 70% 25%;
+    --primary-dark: 211 100% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    /* iOS dark gray */
+    --secondary: 210 10% 16%;
+    --secondary-light: 210 10% 20%;
+    --secondary-foreground: 210 6% 93%;
+
+    --muted: 210 10% 16%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 211 100% 60%;
+    --accent-light: 211 70% 25%;
+    --accent-foreground: 0 0% 100%;
+
+    /* iOS red in dark mode */
+    --destructive: 0 72% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 14% 20%;
+    --input: 215 14% 20%;
+    --ring: 211 100% 60%;
+
+    --brand-blue: 211 100% 60%;
+    --brand-light-blue: 211 70% 25%;
+    --brand-dark-blue: 211 100% 55%;
+    --brand-gray: 210 10% 16%;
+    --brand-light-gray: 210 10% 20%;
+
+    /* Cupertino dark mode shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@layer base {
+  * {
+    border: none;
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  /* Glassmorphism effect */
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+
+  /* Hide scrollbars but keep functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Ensure text wraps properly in chat messages */
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
