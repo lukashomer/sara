@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +12,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
 }) => {
   const navigate = useNavigate();
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (requireAuth && !isAuthenticated) {
