@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/cup-button";
 import { Input } from "./ui/cup-input";
+import { useAuth } from "../contexts/AuthContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -9,13 +10,14 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -34,20 +36,14 @@ const LoginPage = () => {
       return;
     }
 
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Mock authentication logic
-      // In a real app, this would be an API call
-      if (email === "user@example.com" && password === "password") {
-        // Store authentication state
-        localStorage.setItem("isAuthenticated", "true");
-        // Redirect to home page with chat
-        navigate("/");
-      } else {
-        setError("Invalid email or password");
-        setIsLoading(false);
-      }
-    }, 800);
+    try {
+      await login(email, password);
+      navigate("/");
+    } catch (error) {
+      setError("Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
