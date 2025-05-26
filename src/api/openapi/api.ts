@@ -1708,12 +1708,12 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         /**
          * Log in with email and password to get JWT token
          * @summary Login
-         * @param {LoginRequest} loginRequest Login credentials
+         * @param {AuthenticationApiLoginRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<LoginResponse> {
-            return localVarFp.login(loginRequest, options).then((request) => request(axios, basePath));
+        login(requestParameters: AuthenticationApiLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<LoginResponse> {
+            return localVarFp.login(requestParameters.loginRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Log out the current user
@@ -1727,25 +1727,67 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         /**
          * Get a new access token using a refresh token
          * @summary Refresh Token
-         * @param {RefreshTokenRequest} refreshTokenRequest Refresh token request
+         * @param {AuthenticationApiRefreshTokenRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshToken(refreshTokenRequest: RefreshTokenRequest, options?: RawAxiosRequestConfig): AxiosPromise<RefreshTokenResponse> {
-            return localVarFp.refreshToken(refreshTokenRequest, options).then((request) => request(axios, basePath));
+        refreshToken(requestParameters: AuthenticationApiRefreshTokenRequest, options?: RawAxiosRequestConfig): AxiosPromise<RefreshTokenResponse> {
+            return localVarFp.refreshToken(requestParameters.refreshTokenRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Register a new user account
          * @summary Register
-         * @param {RegisterRequest} registerRequest Registration information
+         * @param {AuthenticationApiRegisterRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        register(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): AxiosPromise<RegisterResponse> {
-            return localVarFp.register(registerRequest, options).then((request) => request(axios, basePath));
+        register(requestParameters: AuthenticationApiRegisterRequest, options?: RawAxiosRequestConfig): AxiosPromise<RegisterResponse> {
+            return localVarFp.register(requestParameters.registerRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
+
+/**
+ * Request parameters for login operation in AuthenticationApi.
+ * @export
+ * @interface AuthenticationApiLoginRequest
+ */
+export interface AuthenticationApiLoginRequest {
+    /**
+     * Login credentials
+     * @type {LoginRequest}
+     * @memberof AuthenticationApiLogin
+     */
+    readonly loginRequest: LoginRequest
+}
+
+/**
+ * Request parameters for refreshToken operation in AuthenticationApi.
+ * @export
+ * @interface AuthenticationApiRefreshTokenRequest
+ */
+export interface AuthenticationApiRefreshTokenRequest {
+    /**
+     * Refresh token request
+     * @type {RefreshTokenRequest}
+     * @memberof AuthenticationApiRefreshToken
+     */
+    readonly refreshTokenRequest: RefreshTokenRequest
+}
+
+/**
+ * Request parameters for register operation in AuthenticationApi.
+ * @export
+ * @interface AuthenticationApiRegisterRequest
+ */
+export interface AuthenticationApiRegisterRequest {
+    /**
+     * Registration information
+     * @type {RegisterRequest}
+     * @memberof AuthenticationApiRegister
+     */
+    readonly registerRequest: RegisterRequest
+}
 
 /**
  * AuthenticationApi - object-oriented interface
@@ -1757,13 +1799,13 @@ export class AuthenticationApi extends BaseAPI {
     /**
      * Log in with email and password to get JWT token
      * @summary Login
-     * @param {LoginRequest} loginRequest Login credentials
+     * @param {AuthenticationApiLoginRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).login(loginRequest, options).then((request) => request(this.axios, this.basePath));
+    public login(requestParameters: AuthenticationApiLoginRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).login(requestParameters.loginRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1780,25 +1822,25 @@ export class AuthenticationApi extends BaseAPI {
     /**
      * Get a new access token using a refresh token
      * @summary Refresh Token
-     * @param {RefreshTokenRequest} refreshTokenRequest Refresh token request
+     * @param {AuthenticationApiRefreshTokenRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public refreshToken(refreshTokenRequest: RefreshTokenRequest, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).refreshToken(refreshTokenRequest, options).then((request) => request(this.axios, this.basePath));
+    public refreshToken(requestParameters: AuthenticationApiRefreshTokenRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).refreshToken(requestParameters.refreshTokenRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Register a new user account
      * @summary Register
-     * @param {RegisterRequest} registerRequest Registration information
+     * @param {AuthenticationApiRegisterRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public register(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).register(registerRequest, options).then((request) => request(this.axios, this.basePath));
+    public register(requestParameters: AuthenticationApiRegisterRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).register(requestParameters.registerRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -2117,55 +2159,171 @@ export const FeaturesApiFactory = function (configuration?: Configuration, baseP
         /**
          * Process chat request with OpenAI GPT 4 Omni model with web search capability
          * @summary Chat with AI
-         * @param {string} userId External user ID to track conversation history
-         * @param {string} topicId Conversation topic ID to organize messages
-         * @param {string} message User message content
-         * @param {string} [title] Optional title for the conversation
-         * @param {File} [image] Optional single image to analyze as part of the message
-         * @param {Array<File>} [images] Optional multiple images to analyze as part of the message (for property listings, etc.)
+         * @param {FeaturesApiChatRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        chat(userId: string, topicId: string, message: string, title?: string, image?: File, images?: Array<File>, options?: RawAxiosRequestConfig): AxiosPromise<ChatResponse> {
-            return localVarFp.chat(userId, topicId, message, title, image, images, options).then((request) => request(axios, basePath));
+        chat(requestParameters: FeaturesApiChatRequest, options?: RawAxiosRequestConfig): AxiosPromise<ChatResponse> {
+            return localVarFp.chat(requestParameters.userId, requestParameters.topicId, requestParameters.message, requestParameters.title, requestParameters.image, requestParameters.images, options).then((request) => request(axios, basePath));
         },
         /**
          * Retrieve chat history for a user, either for all topics or for a specific topic
          * @summary Get chat history
-         * @param {string} userId External user ID to get chat history for
-         * @param {string} [topicId] Optional topic ID to get history for a specific conversation
+         * @param {FeaturesApiGetChatHistoryRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getChatHistory(userId: string, topicId?: string, options?: RawAxiosRequestConfig): AxiosPromise<GetChatHistory200Response> {
-            return localVarFp.getChatHistory(userId, topicId, options).then((request) => request(axios, basePath));
+        getChatHistory(requestParameters: FeaturesApiGetChatHistoryRequest, options?: RawAxiosRequestConfig): AxiosPromise<GetChatHistory200Response> {
+            return localVarFp.getChatHistory(requestParameters.userId, requestParameters.topicId, options).then((request) => request(axios, basePath));
         },
         /**
          * Retrieve all chat conversations for the currently authenticated user with pagination and sorting options
          * @summary Get user conversations
-         * @param {number} [limit] Maximum number of conversations to return (default: 50)
-         * @param {number} [offset] Number of conversations to skip (for pagination, default: 0)
-         * @param {GetUserConversationsSortByEnum} [sortBy] Field to sort by (default: \&#39;updated_at\&#39;)
-         * @param {GetUserConversationsSortOrderEnum} [sortOrder] Sort order (default: \&#39;desc\&#39;)
+         * @param {FeaturesApiGetUserConversationsRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getUserConversations(limit?: number, offset?: number, sortBy?: GetUserConversationsSortByEnum, sortOrder?: GetUserConversationsSortOrderEnum, options?: RawAxiosRequestConfig): AxiosPromise<UserConversationsResponse> {
-            return localVarFp.getUserConversations(limit, offset, sortBy, sortOrder, options).then((request) => request(axios, basePath));
+        getUserConversations(requestParameters: FeaturesApiGetUserConversationsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<UserConversationsResponse> {
+            return localVarFp.getUserConversations(requestParameters.limit, requestParameters.offset, requestParameters.sortBy, requestParameters.sortOrder, options).then((request) => request(axios, basePath));
         },
         /**
          * Search in chat history for the currently authenticated user
          * @summary Search chat history
-         * @param {string} query Search query
-         * @param {number} [limit] Maximum number of results to return
+         * @param {FeaturesApiSearchChatHistoryRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        searchChatHistory(query: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<SearchChatResponse> {
-            return localVarFp.searchChatHistory(query, limit, options).then((request) => request(axios, basePath));
+        searchChatHistory(requestParameters: FeaturesApiSearchChatHistoryRequest, options?: RawAxiosRequestConfig): AxiosPromise<SearchChatResponse> {
+            return localVarFp.searchChatHistory(requestParameters.query, requestParameters.limit, options).then((request) => request(axios, basePath));
         },
     };
 };
+
+/**
+ * Request parameters for chat operation in FeaturesApi.
+ * @export
+ * @interface FeaturesApiChatRequest
+ */
+export interface FeaturesApiChatRequest {
+    /**
+     * External user ID to track conversation history
+     * @type {string}
+     * @memberof FeaturesApiChat
+     */
+    readonly userId: string
+
+    /**
+     * Conversation topic ID to organize messages
+     * @type {string}
+     * @memberof FeaturesApiChat
+     */
+    readonly topicId: string
+
+    /**
+     * User message content
+     * @type {string}
+     * @memberof FeaturesApiChat
+     */
+    readonly message: string
+
+    /**
+     * Optional title for the conversation
+     * @type {string}
+     * @memberof FeaturesApiChat
+     */
+    readonly title?: string
+
+    /**
+     * Optional single image to analyze as part of the message
+     * @type {File}
+     * @memberof FeaturesApiChat
+     */
+    readonly image?: File
+
+    /**
+     * Optional multiple images to analyze as part of the message (for property listings, etc.)
+     * @type {Array<File>}
+     * @memberof FeaturesApiChat
+     */
+    readonly images?: Array<File>
+}
+
+/**
+ * Request parameters for getChatHistory operation in FeaturesApi.
+ * @export
+ * @interface FeaturesApiGetChatHistoryRequest
+ */
+export interface FeaturesApiGetChatHistoryRequest {
+    /**
+     * External user ID to get chat history for
+     * @type {string}
+     * @memberof FeaturesApiGetChatHistory
+     */
+    readonly userId: string
+
+    /**
+     * Optional topic ID to get history for a specific conversation
+     * @type {string}
+     * @memberof FeaturesApiGetChatHistory
+     */
+    readonly topicId?: string
+}
+
+/**
+ * Request parameters for getUserConversations operation in FeaturesApi.
+ * @export
+ * @interface FeaturesApiGetUserConversationsRequest
+ */
+export interface FeaturesApiGetUserConversationsRequest {
+    /**
+     * Maximum number of conversations to return (default: 50)
+     * @type {number}
+     * @memberof FeaturesApiGetUserConversations
+     */
+    readonly limit?: number
+
+    /**
+     * Number of conversations to skip (for pagination, default: 0)
+     * @type {number}
+     * @memberof FeaturesApiGetUserConversations
+     */
+    readonly offset?: number
+
+    /**
+     * Field to sort by (default: \&#39;updated_at\&#39;)
+     * @type {'created_at' | 'updated_at' | 'title'}
+     * @memberof FeaturesApiGetUserConversations
+     */
+    readonly sortBy?: GetUserConversationsSortByEnum
+
+    /**
+     * Sort order (default: \&#39;desc\&#39;)
+     * @type {'asc' | 'desc'}
+     * @memberof FeaturesApiGetUserConversations
+     */
+    readonly sortOrder?: GetUserConversationsSortOrderEnum
+}
+
+/**
+ * Request parameters for searchChatHistory operation in FeaturesApi.
+ * @export
+ * @interface FeaturesApiSearchChatHistoryRequest
+ */
+export interface FeaturesApiSearchChatHistoryRequest {
+    /**
+     * Search query
+     * @type {string}
+     * @memberof FeaturesApiSearchChatHistory
+     */
+    readonly query: string
+
+    /**
+     * Maximum number of results to return
+     * @type {number}
+     * @memberof FeaturesApiSearchChatHistory
+     */
+    readonly limit?: number
+}
 
 /**
  * FeaturesApi - object-oriented interface
@@ -2177,59 +2335,49 @@ export class FeaturesApi extends BaseAPI {
     /**
      * Process chat request with OpenAI GPT 4 Omni model with web search capability
      * @summary Chat with AI
-     * @param {string} userId External user ID to track conversation history
-     * @param {string} topicId Conversation topic ID to organize messages
-     * @param {string} message User message content
-     * @param {string} [title] Optional title for the conversation
-     * @param {File} [image] Optional single image to analyze as part of the message
-     * @param {Array<File>} [images] Optional multiple images to analyze as part of the message (for property listings, etc.)
+     * @param {FeaturesApiChatRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeaturesApi
      */
-    public chat(userId: string, topicId: string, message: string, title?: string, image?: File, images?: Array<File>, options?: RawAxiosRequestConfig) {
-        return FeaturesApiFp(this.configuration).chat(userId, topicId, message, title, image, images, options).then((request) => request(this.axios, this.basePath));
+    public chat(requestParameters: FeaturesApiChatRequest, options?: RawAxiosRequestConfig) {
+        return FeaturesApiFp(this.configuration).chat(requestParameters.userId, requestParameters.topicId, requestParameters.message, requestParameters.title, requestParameters.image, requestParameters.images, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Retrieve chat history for a user, either for all topics or for a specific topic
      * @summary Get chat history
-     * @param {string} userId External user ID to get chat history for
-     * @param {string} [topicId] Optional topic ID to get history for a specific conversation
+     * @param {FeaturesApiGetChatHistoryRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeaturesApi
      */
-    public getChatHistory(userId: string, topicId?: string, options?: RawAxiosRequestConfig) {
-        return FeaturesApiFp(this.configuration).getChatHistory(userId, topicId, options).then((request) => request(this.axios, this.basePath));
+    public getChatHistory(requestParameters: FeaturesApiGetChatHistoryRequest, options?: RawAxiosRequestConfig) {
+        return FeaturesApiFp(this.configuration).getChatHistory(requestParameters.userId, requestParameters.topicId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Retrieve all chat conversations for the currently authenticated user with pagination and sorting options
      * @summary Get user conversations
-     * @param {number} [limit] Maximum number of conversations to return (default: 50)
-     * @param {number} [offset] Number of conversations to skip (for pagination, default: 0)
-     * @param {GetUserConversationsSortByEnum} [sortBy] Field to sort by (default: \&#39;updated_at\&#39;)
-     * @param {GetUserConversationsSortOrderEnum} [sortOrder] Sort order (default: \&#39;desc\&#39;)
+     * @param {FeaturesApiGetUserConversationsRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeaturesApi
      */
-    public getUserConversations(limit?: number, offset?: number, sortBy?: GetUserConversationsSortByEnum, sortOrder?: GetUserConversationsSortOrderEnum, options?: RawAxiosRequestConfig) {
-        return FeaturesApiFp(this.configuration).getUserConversations(limit, offset, sortBy, sortOrder, options).then((request) => request(this.axios, this.basePath));
+    public getUserConversations(requestParameters: FeaturesApiGetUserConversationsRequest = {}, options?: RawAxiosRequestConfig) {
+        return FeaturesApiFp(this.configuration).getUserConversations(requestParameters.limit, requestParameters.offset, requestParameters.sortBy, requestParameters.sortOrder, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Search in chat history for the currently authenticated user
      * @summary Search chat history
-     * @param {string} query Search query
-     * @param {number} [limit] Maximum number of results to return
+     * @param {FeaturesApiSearchChatHistoryRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeaturesApi
      */
-    public searchChatHistory(query: string, limit?: number, options?: RawAxiosRequestConfig) {
-        return FeaturesApiFp(this.configuration).searchChatHistory(query, limit, options).then((request) => request(this.axios, this.basePath));
+    public searchChatHistory(requestParameters: FeaturesApiSearchChatHistoryRequest, options?: RawAxiosRequestConfig) {
+        return FeaturesApiFp(this.configuration).searchChatHistory(requestParameters.query, requestParameters.limit, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
