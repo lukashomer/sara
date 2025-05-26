@@ -17,7 +17,8 @@
     "strict": false,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src"],
   "exclude": ["src/tempobook"],
