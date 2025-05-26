@@ -2,19 +2,19 @@ import React, { createContext, useContext, useState } from "react";
 import { externalLogin } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
-interface User {
+type User = {
   id: string;
   email: string;
   name: string;
   role: string;
-}
+};
 
-interface AuthContextType {
+type AuthContextType = {
   isAuthenticated: boolean;
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-}
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -55,9 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     navigate("/login");
   };
 
-
-
-  
   const value = {
     isAuthenticated,
     user,

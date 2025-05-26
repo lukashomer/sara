@@ -2,15 +2,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// // Add event types
-// type AuthEventType = "logout" | "login" | "tokenExpired";
-
-// interface AuthEvent {
-//   type: AuthEventType;
-//   data?: any;
-// }
-
-interface AuthResponse {
+type AuthResponse = {
   expires_in: number;
   token: string;
   refresh_token: string;
@@ -22,14 +14,14 @@ interface AuthResponse {
     name: string;
     role: string;
   };
-}
+};
 
-interface RefreshTokenResponse {
+type RefreshTokenResponse = {
   success: boolean;
   message: string;
   token: string;
   expires_in: number;
-}
+};
 
 export const externalLogin = async (email: string, password: string) => {
   const response = await axios.post<AuthResponse>(
@@ -72,7 +64,3 @@ export const refreshToken = async () => {
 
   return response.data;
 };
-
-export const logout = async () => {
-  
-}
