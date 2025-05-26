@@ -31,13 +31,5 @@ export default {
 
 ## Generate client api calls and api
 
-- First install OpenAPI Generator [DOCS](https://openapi-generator.tech/docs/installation)
-  - on mac run `brew install openapi-generator`
-- To generate api calls run command:
-
-```
-openapi-generator generate -i {API_URL}/openapi.json -g typescript-axios -o src/api/openapi/ --skip-validate-spec
-```
-
-- API_URL is the same url as VITE_API_URL in .env.example
-  - API_URL=VITE_API_URL
+- OpenAPI code generation is provided by: https://github.com/fabien0102/openapi-codegen
+- To generate run npx `openapi-codegen gen sara`
