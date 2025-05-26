@@ -57,15 +57,12 @@ axiosService.interceptors.request.use(
 );
 
 axiosService.interceptors.response.use(
-  (response) => response,
+  async (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     // If the error is not 401 or the request has already been retried, reject
     if (error.response?.status !== 401 || originalRequest._retry) {
-      if (error.response?.status === 401) {
-        logout();
-      }
       return Promise.reject(error);
     }
 

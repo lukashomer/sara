@@ -1,22 +1,37 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useMemo } from "react";
+import { Link, useParams } from "react-router-dom";
 import Header from "./Header";
-import ChatPane from "./ChatPane";
+import ChatPane, { Message } from "./ChatPane";
 import WorkspacePane from "./WorkspacePane";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGetChatHistory } from "@/api/saraComponents";
+import { isMultipleTopics, isSingleTopic } from "@/api/TApi";
 
 // Component interfaces moved to their respective component files
 
 const Home = () => {
-  // State for messages and properties
-  const [messages, setMessages] = React.useState([
-    {
-      id: "1",
-      sender: "ai" as const,
-      content:
-        "Hello! I'm your AI-powered real estate assistant. How can I help you today?",
-      timestamp: new Date(),
+  const { topicId } = useParams();
+  const {
+    user: { id: userId },
+  } = useAuth();
+  const { data } = useGetChatHistory({
+    queryParams: {
+      userId,
+      ...(topicId && topicId !== "undefined" ? { topicId } : {}),
     },
-  ]);
+  });
+
+  const messages: Message[] | undefined = useMemo(() => {
+    if (isMultipleTopics(data)) {
+      return undefined;
+    }
+    return data?.messages?.map((message) => ({
+      id: message.sequence?.toString() ?? "",
+      content: message.content,
+      sender: message?.role === "user" ? "user" : "ai",
+      timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
+    }));
+  }, [data]);
 
   const [properties, setProperties] = React.useState([
     {
@@ -50,26 +65,24 @@ const Home = () => {
 
   const handleSendMessage = (message: string) => {
     // Add user message
-    const newUserMessage = {
-      id: Date.now().toString(),
-      sender: "user" as const,
-      content: message,
-      timestamp: new Date(),
-    };
-
-    setMessages([...messages, newUserMessage]);
-
-    // Simulate AI response (in a real app, this would be an API call)
-    setTimeout(() => {
-      const aiResponse = {
-        id: (Date.now() + 1).toString(),
-        sender: "ai" as const,
-        content:
-          "I found some properties that might interest you. Take a look at the workspace panel.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+    // const newUserMessage = {
+    //   id: Date.now().toString(),
+    //   sender: "user" as const,
+    //   content: message,
+    //   timestamp: new Date(),
+    // };
+    // setMessages([...messages, newUserMessage]);
+    // // Simulate AI response (in a real app, this would be an API call)
+    // setTimeout(() => {
+    //   const aiResponse = {
+    //     id: (Date.now() + 1).toString(),
+    //     sender: "ai" as const,
+    //     content:
+    //       "I found some properties that might interest you. Take a look at the workspace panel.",
+    //     timestamp: new Date(),
+    //   };
+    //   setMessages((prev) => [...prev, aiResponse]);
+    // }, 1000);
   };
 
   const quickActions = [
@@ -86,7 +99,7 @@ const Home = () => {
       const contentHeight = vh - headerHeight;
       document.documentElement.style.setProperty(
         "--content-height",
-        `${contentHeight}px`,
+        `${contentHeight}px`
       );
     };
 

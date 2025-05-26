@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext, useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import VerticalToolbar from "./chat/VerticalToolbar";
 import {
   PanelLeft,
@@ -42,8 +42,9 @@ import {
   SheetClose,
 } from "./ui/sheet";
 import WorkspacePane from "./WorkspacePane";
+import { useGetUserConversations } from "@/api/saraComponents";
 
-interface Message {
+export interface Message {
   id: string;
   content: string;
   sender: "user" | "ai";
@@ -88,9 +89,10 @@ const ChatPane = ({
     useContext(WorkspacePaneContext);
   const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
   const [isWorkspaceSheetOpen, setIsWorkspaceSheetOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Handle window resize to detect mobile/desktop
   useEffect(() => {
@@ -113,28 +115,23 @@ const ChatPane = ({
     { id: "valuation", label: "Request Property Valuation" },
   ];
 
-  // Sample chat history data
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([
-    {
-      id: "1",
-      title: "John Smith: Property Search",
-      lastMessage: "What are the prices for 2-bedroom apartments?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      unread: true,
-    },
-    {
-      id: "2",
-      title: "Sarah Johnson: Market Analysis",
-      lastMessage: "Can you analyze the rental market in Brooklyn?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    },
-    {
-      id: "3",
-      title: "Michael Brown: Investment Advice",
-      lastMessage: "Show me investment properties with high ROI",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    },
-  ]);
+  const { data } = useGetUserConversations({});
+
+  const initialConversations: ChatHistory[] = useMemo(() => {
+    return data?.conversations?.map((conversation) => ({
+      id: conversation.topic_id,
+      title: conversation.title,
+      lastMessage: conversation.preview,
+      timestamp: new Date(conversation.updated_at),
+    }));
+  }, [data]);
+
+  const [conversations, setConversations] =
+    useState<ChatHistory[]>(initialConversations);
+
+  useEffect(() => {
+    setConversations(initialConversations);
+  }, [initialConversations]);
 
   const toggleHistorySidebar = () => {
     setIsHistorySidebarOpen(!isHistorySidebarOpen);
@@ -168,7 +165,7 @@ const ChatPane = ({
     };
 
     // Add to chat history
-    setChatHistory([newChat, ...chatHistory]);
+    setConversations([newChat, ...conversations]);
 
     onNewConversation({
       clientName,
@@ -186,15 +183,15 @@ const ChatPane = ({
     // Handle selecting a chat from history
     setIsHistorySidebarOpen(false);
     // Find the selected chat
-    const selectedChat = chatHistory.find((chat) => chat.id === chatId);
+    const selectedChat = conversations.find((chat) => chat.id === chatId);
     if (selectedChat) {
       // Mark as read
-      setChatHistory(
-        chatHistory.map((chat) =>
-          chat.id === chatId ? { ...chat, unread: false } : chat,
-        ),
+      setConversations(
+        conversations.map((chat) =>
+          chat.id === chatId ? { ...chat, unread: false } : chat
+        )
       );
-      // Additional logic to load the selected chat could be added here
+      navigate(`/${chatId}`);
     }
   };
 
@@ -219,7 +216,7 @@ const ChatPane = ({
           isOpen={isHistorySidebarOpen}
           onClose={toggleHistorySidebar}
           onNewChat={handleNewChat}
-          chatHistory={chatHistory}
+          chatHistory={conversations}
           onSelectChat={handleSelectChat}
           className="rounded-tr-2xl flex"
         />

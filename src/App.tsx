@@ -6,6 +6,7 @@ import AuthGuard from "./components/AuthGuard";
 import routes from "tempo-routes";
 import { WorkspaceFeature } from "./components/workspace/WorkspaceSidebar";
 import { AuthProvider } from "./contexts/AuthContext";
+import ReactQueryProvider from "./contexts/ReactQueryContext";
 
 export const WorkspacePaneContext = React.createContext({
   isWorkspacePaneVisible: true,
@@ -24,39 +25,41 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <WorkspacePaneContext.Provider
-        value={{
-          isWorkspacePaneVisible,
-          toggleWorkspacePane,
-          activeFeature,
-          setActiveFeature,
-        }}
-      >
-        <Suspense fallback={<p>Loading...</p>}>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <AuthGuard requireAuth={false}>
-                  <LoginPage />
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <AuthGuard>
-                  <Home />
-                </AuthGuard>
-              }
-            />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </Routes>
-          {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-        </Suspense>
-      </WorkspacePaneContext.Provider>
-    </AuthProvider>
+    <ReactQueryProvider>
+      <AuthProvider>
+        <WorkspacePaneContext.Provider
+          value={{
+            isWorkspacePaneVisible,
+            toggleWorkspacePane,
+            activeFeature,
+            setActiveFeature,
+          }}
+        >
+          <Suspense fallback={<p>Loading...</p>}>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <AuthGuard requireAuth={false}>
+                    <LoginPage />
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/:topicId?"
+                element={
+                  <AuthGuard>
+                    <Home />
+                  </AuthGuard>
+                }
+              />
+              <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
+            {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+          </Suspense>
+        </WorkspacePaneContext.Provider>
+      </AuthProvider>
+    </ReactQueryProvider>
   );
 }
 
