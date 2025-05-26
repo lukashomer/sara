@@ -17,14 +17,27 @@ If you are developing a production application, we recommend updating the config
 export default {
   // other rules...
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
+    ecmaVersion: "latest",
+    sourceType: "module",
+    project: ["./tsconfig.json", "./tsconfig.node.json"],
     tsconfigRootDir: __dirname,
   },
-}
+};
 ```
 
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+
+## Generate client api calls and api
+
+- First install OpenAPI Generator [DOCS](https://openapi-generator.tech/docs/installation)
+  - on mac run `brew install openapi-generator`
+- To generate api calls run command:
+
+```
+openapi-generator generate -i {API_URL}/openapi.json -g typescript-axios -o src/api/openapi/ --skip-validate-spec
+```
+
+- API_URL is the same url as VITE_API_URL in .env.example
+  - API_URL=VITE_API_URL
