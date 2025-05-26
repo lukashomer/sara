@@ -1,54 +1,75 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import Header from "./Header";
-import ChatPane from "./ChatPane";
+import ChatPane, { Message } from "./ChatPane";
 import WorkspacePane from "./WorkspacePane";
+import { useAuth } from "@/contexts/AuthContext";
+import { useChat, useGetChatHistory } from "@/api/saraComponents";
+import { removeUndefinedParams } from "@/lib/utils";
+import { isMultipleTopics, transformChatMessage } from "@/lib/apiUtils";
+import { Sheet, SheetContent, SheetHeader, SheetClose } from "./ui/sheet";
+import { X } from "lucide-react";
+import { WorkspacePaneContext } from "@/App";
 
 // Component interfaces moved to their respective component files
 
 const Home = () => {
-  // State for messages and properties
-  const [messages, setMessages] = React.useState([
-    {
-      id: "1",
-      sender: "ai" as const,
-      content:
-        "Hello! I'm your AI-powered real estate assistant. How can I help you today?",
-      timestamp: new Date(),
-    },
-  ]);
+  const { topicId } = useParams();
+  const {
+    user: { id: userId },
+  } = useAuth();
+  const {
+    isWorkspaceSheetOpen,
+    setIsWorkspaceSheetOpen,
+    isWorkspacePaneVisible,
+    setIsWorkspacePaneVisible,
+  } = useContext(WorkspacePaneContext);
 
-  const [properties, setProperties] = React.useState([
-    {
-      id: "1",
-      category: "Residential",
-      image:
-        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80",
-      title: "Modern Family Home",
-      address: "123 Maple Street, Anytown, USA",
-    },
-    {
-      id: "2",
-      category: "Commercial",
-      image:
-        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
-      title: "Downtown Office Space",
-      address: "456 Business Ave, Metropolis, USA",
-    },
-    {
-      id: "3",
-      category: "Residential",
-      image:
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-      title: "Cozy Suburban Cottage",
-      address: "789 Oak Lane, Pleasantville, USA",
-    },
-  ]);
+  const { data, refetch: refetchChatHistory } = useGetChatHistory({
+    queryParams: removeUndefinedParams({
+      userId,
+      topicId,
+    }),
+  });
+
+  const { mutateAsync: postMessage } = useChat();
+
+  const initialMessages: Message[] | undefined = useMemo(() => {
+    if (isMultipleTopics(data)) {
+      return undefined;
+    }
+    return data?.messages?.map(transformChatMessage);
+  }, [data]);
+
+  const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
+
+  // Sync messages with useGetChatHistory query
+  useEffect(() => {
+    setMessages(initialMessages ?? []);
+  }, [initialMessages]);
+
+  // extract last message and its tool results
+  const { lastMessageToolResult, lastUserMessage } = useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    // get last user message
+    const lastUserMessage = messages.findLast(
+      (message) => message.sender === "user"
+    );
+
+    return {
+      lastUserMessage,
+      lastMessageToolResult: lastMessage?.toolResults?.[0]?.result,
+    };
+  }, [messages]);
+
+  useEffect(() => {
+    setIsWorkspacePaneVisible(!!lastMessageToolResult);
+  }, [lastMessageToolResult]);
 
   const [workspaceTitle] = React.useState("Your workspace");
   const [workspaceSubtitle] = React.useState("Lifestyle Map for a family of 5");
 
-  const handleSendMessage = (message: string) => {
+  const handleSendMessage = async (message: string) => {
     // Add user message
     const newUserMessage = {
       id: Date.now().toString(),
@@ -56,20 +77,29 @@ const Home = () => {
       content: message,
       timestamp: new Date(),
     };
-
-    setMessages([...messages, newUserMessage]);
-
-    // Simulate AI response (in a real app, this would be an API call)
-    setTimeout(() => {
-      const aiResponse = {
-        id: (Date.now() + 1).toString(),
+    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+    // API call
+    const response = await postMessage({
+      body: removeUndefinedParams({
+        topicId,
+        message,
+        userId,
+      }),
+    });
+    // Add response to messages
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        id: Date.now().toString(),
         sender: "ai" as const,
-        content:
-          "I found some properties that might interest you. Take a look at the workspace panel.",
+        content: response.message ?? "",
         timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+        toolCalls: response.tool_calls,
+        toolResults: response.tool_results,
+      },
+    ]);
+    // Invalidate chat-history query
+    refetchChatHistory();
   };
 
   const quickActions = [
@@ -86,7 +116,7 @@ const Home = () => {
       const contentHeight = vh - headerHeight;
       document.documentElement.style.setProperty(
         "--content-height",
-        `${contentHeight}px`,
+        `${contentHeight}px`
       );
     };
 
@@ -115,7 +145,11 @@ const Home = () => {
       {/* Main Content */}
       <div className="flex h-[var(--content-height)] overflow-hidden">
         {/* Chat Pane (Left) */}
-        <div className="w-full md:w-[65%] h-full">
+        <div
+          className={`w-full md:w-[${
+            isWorkspacePaneVisible ? "65%" : "100%"
+          }] h-full`}
+        >
           <ChatPane
             messages={messages}
             quickActions={quickActions}
@@ -124,14 +158,37 @@ const Home = () => {
         </div>
 
         {/* Workspace Pane (Right) */}
-        <div className="hidden md:block md:w-[35%] h-full">
+        <div
+          className={`hidden md:block md:w-[${
+            isWorkspacePaneVisible ? "35%" : "0%"
+          }] h-full`}
+        >
           <WorkspacePane
             title={workspaceTitle}
             subtitle={workspaceSubtitle}
-            properties={properties}
-            className="shadow-none"
+            toolResult={lastMessageToolResult}
           />
         </div>
+
+        {/* Mobile Workspace Sheet */}
+        <Sheet
+          open={isWorkspaceSheetOpen}
+          onOpenChange={setIsWorkspaceSheetOpen}
+        >
+          <SheetContent
+            side="right"
+            className="sm:w-[350px] p-0 border-l w-[85vw] max-w-[400px]"
+          >
+            <SheetHeader className="p-4 flex justify-end border-b">
+              <SheetClose className="rounded-full p-2 hover:bg-gray-100">
+                <X size={20} />
+              </SheetClose>
+            </SheetHeader>
+            <div className="h-full overflow-hidden">
+              <WorkspacePane toolResult={lastMessageToolResult} />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
@@ -15,8 +15,22 @@ interface MessageListProps {
 }
 
 const MessageList = ({ messages, isLoading = false }: MessageListProps) => {
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {  
+      // scroll to bottom
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+      });
+    }
+  }, [messages]);
+
   return (
-    <ScrollArea className="flex-1 p-3 sm:p-4 md:p-5 scroll-container">
+    <ScrollArea
+      className="flex-1 p-3 sm:p-4 md:p-5 scroll-container"
+      viewportRef={scrollAreaRef}
+    >
       <div className="flex flex-col space-y-4 sm:space-y-5">
         {messages.map((message) => (
           <div

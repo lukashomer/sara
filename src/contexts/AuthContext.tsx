@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { externalLogin } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
@@ -28,6 +28,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     !!localStorage.getItem("access_token")
   );
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleLocalStorageEvent = (event: StorageEvent) => {
+      if (event.key === "access_token") {
+        if (event.newValue) {
+          setIsAuthenticated(true);
+        } else {
+          logout();
+        }
+      }
+      if (event.key === "user") {
+        if (event.newValue) {
+          setUser(JSON.parse(event.newValue));
+        } else {
+          logout();
+        }
+      }
+      if (event.key === "refresh_token") {
+        if (!event.newValue) {
+          logout();
+        }
+      }
+    };
+    window.addEventListener("storage", handleLocalStorageEvent);
+    return () => window.removeEventListener("storage", handleLocalStorageEvent);
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {

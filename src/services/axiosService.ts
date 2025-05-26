@@ -1,8 +1,10 @@
 import axios from "axios";
 import { refreshToken } from "./authService";
 
+export const API_URL = import.meta.env.VITE_API_URL;
+
 export const axiosService = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -55,15 +57,12 @@ axiosService.interceptors.request.use(
 );
 
 axiosService.interceptors.response.use(
-  (response) => response,
+  async (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     // If the error is not 401 or the request has already been retried, reject
     if (error.response?.status !== 401 || originalRequest._retry) {
-      if (error.response?.status === 401) {
-        logout();
-      }
       return Promise.reject(error);
     }
 

@@ -1,24 +1,12 @@
-import React, { useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import VerticalToolbar from "./chat/VerticalToolbar";
-import {
-  PanelLeft,
-  Plus,
-  LayoutPanelLeft,
-  Send,
-  PanelRightOpen,
-  X,
-  LayoutDashboard as DashboardIcon,
-  LayoutGrid,
-  FileText,
-  Rows4,
-} from "lucide-react";
+import { PanelLeft, Rows4 } from "lucide-react";
 import { Button } from "./ui/button";
-import { cn } from "../lib/utils";
+import { removeUndefinedParams } from "../lib/utils";
 import ChatHistorySidebar from "./chat/ChatHistory";
 import MessageList from "./chat/MessageList";
 import ChatInput from "./chat/ChatInput";
-import { WorkspacePaneContext } from "../App";
 import {
   Dialog,
   DialogContent,
@@ -34,20 +22,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from "./ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetClose } from "./ui/sheet";
 import WorkspacePane from "./WorkspacePane";
+import {
+  useCreateConversation,
+  useGetUserConversations,
+} from "@/api/saraComponents";
+import { CreateConversationRequest } from "@/api/saraSchemas";
+import { WorkspacePaneContext } from "@/App";
 
-interface Message {
+export interface Message {
   id: string;
   content: string;
   sender: "user" | "ai";
   timestamp: Date;
+  toolCalls?: any;
+  toolResults?: any;
 }
 
 interface ChatHistory {
@@ -67,12 +57,6 @@ interface ChatPaneProps {
   messages?: Message[];
   onSendMessage?: (message: string) => void;
   onQuickActionClick?: (action: QuickAction) => void;
-  onNewConversation?: (data?: {
-    clientName: string;
-    purpose: string;
-    comment: string;
-  }) => void;
-  onViewHistory?: () => void;
   isLoading?: boolean;
 }
 
@@ -80,27 +64,13 @@ const ChatPane = ({
   messages = [],
   onSendMessage = () => {},
   onQuickActionClick = () => {},
-  onNewConversation = () => {},
-  onViewHistory = () => {},
   isLoading = false,
 }: ChatPaneProps) => {
-  const { toggleWorkspacePane, isWorkspacePaneVisible } =
-    useContext(WorkspacePaneContext);
   const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 768 : false,
-  );
-  const [isWorkspaceSheetOpen, setIsWorkspaceSheetOpen] = useState(false);
+  const navigate = useNavigate();
+  const { setIsWorkspaceSheetOpen, isWorkspacePaneVisible } =
+    useContext(WorkspacePaneContext);
 
-  // Handle window resize to detect mobile/desktop
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
   const [isNewConversationDialogOpen, setIsNewConversationDialogOpen] =
     useState(false);
   const [clientName, setClientName] = useState("");
@@ -113,28 +83,25 @@ const ChatPane = ({
     { id: "valuation", label: "Request Property Valuation" },
   ];
 
-  // Sample chat history data
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([
-    {
-      id: "1",
-      title: "John Smith: Property Search",
-      lastMessage: "What are the prices for 2-bedroom apartments?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      unread: true,
-    },
-    {
-      id: "2",
-      title: "Sarah Johnson: Market Analysis",
-      lastMessage: "Can you analyze the rental market in Brooklyn?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    },
-    {
-      id: "3",
-      title: "Michael Brown: Investment Advice",
-      lastMessage: "Show me investment properties with high ROI",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    },
-  ]);
+  const { mutateAsync: postNewConversation } = useCreateConversation();
+
+  const { data, refetch: refetchConversations } = useGetUserConversations({});
+
+  const initialConversations: ChatHistory[] = useMemo(() => {
+    return data?.conversations?.map((conversation) => ({
+      id: conversation.topic_id,
+      title: conversation.title,
+      lastMessage: conversation.preview,
+      timestamp: new Date(conversation.updated_at),
+    }));
+  }, [data]);
+
+  const [conversations, setConversations] =
+    useState<ChatHistory[]>(initialConversations);
+
+  useEffect(() => {
+    setConversations(initialConversations);
+  }, [initialConversations]);
 
   const toggleHistorySidebar = () => {
     setIsHistorySidebarOpen(!isHistorySidebarOpen);
@@ -145,56 +112,71 @@ const ChatPane = ({
     setIsHistorySidebarOpen(false);
   };
 
-  const handleCreateNewConversation = () => {
+  const handleResetNewConversation = () => {
+    setIsNewConversationDialogOpen(false);
+    setClientName("");
+    setPurpose("");
+    setComment("");
+  };
+
+  const handleCreateNewConversation = async () => {
     // Create a new chat history item
-    const newChatId = `new-${Date.now()}`;
-    const purposeLabel =
-      {
-        "property-search": "Property Search",
-        "market-analysis": "Market Analysis",
-        valuation: "Property Valuation",
-        investment: "Investment Advice",
-        other: "Other",
-      }[purpose] || purpose;
+    const purposeMap: Record<string, CreateConversationRequest["purpose"]> = {
+      "property-search": "Property Search",
+      "market-analysis": "Market Analysis",
+      valuation: "Property Valuation",
+      investment: "Investment Advice",
+      other: "Other",
+    };
+
+    const purposeLabel: CreateConversationRequest["purpose"] =
+      purposeMap[purpose] || "Other";
+
+    const title = clientName
+      ? `${clientName}: ${purposeLabel}`
+      : purposeLabel || "New Conversation";
 
     const newChat = {
-      id: newChatId,
-      title: clientName
-        ? `${clientName}: ${purposeLabel}`
-        : purposeLabel || "New Conversation",
+      id: `new-${Date.now()}`,
+      title,
       lastMessage: comment || "Conversation started",
       timestamp: new Date(),
       unread: false,
     };
 
     // Add to chat history
-    setChatHistory([newChat, ...chatHistory]);
+    setConversations([newChat, ...conversations]);
+    // Invalidate conversations query
 
-    onNewConversation({
-      clientName,
-      purpose,
-      comment,
+    const res = await postNewConversation({
+      body: removeUndefinedParams({
+        title,
+        comment,
+        purpose: purposeLabel,
+      }),
     });
-    setIsNewConversationDialogOpen(false);
-    // Reset form fields
-    setClientName("");
-    setPurpose("");
-    setComment("");
+
+    if (!res.topic_id) {
+      return;
+    }
+    refetchConversations();
+    handleResetNewConversation();
+    navigate(`/${res.topic_id}`);
   };
 
   const handleSelectChat = (chatId: string) => {
     // Handle selecting a chat from history
     setIsHistorySidebarOpen(false);
     // Find the selected chat
-    const selectedChat = chatHistory.find((chat) => chat.id === chatId);
+    const selectedChat = conversations.find((chat) => chat.id === chatId);
     if (selectedChat) {
       // Mark as read
-      setChatHistory(
-        chatHistory.map((chat) =>
-          chat.id === chatId ? { ...chat, unread: false } : chat,
-        ),
+      setConversations(
+        conversations.map((chat) =>
+          chat.id === chatId ? { ...chat, unread: false } : chat
+        )
       );
-      // Additional logic to load the selected chat could be added here
+      navigate(`/${chatId}`);
     }
   };
 
@@ -206,8 +188,6 @@ const ChatPane = ({
           isHistorySidebarOpen={isHistorySidebarOpen}
           onToggleHistory={toggleHistorySidebar}
           onNewChat={handleNewChat}
-          onToggleWorkspace={toggleWorkspacePane}
-          className="rounded-tr-md"
         />
       </div>
       {/* Chat History Sidebar - Shows when history button is clicked */}
@@ -219,9 +199,8 @@ const ChatPane = ({
           isOpen={isHistorySidebarOpen}
           onClose={toggleHistorySidebar}
           onNewChat={handleNewChat}
-          chatHistory={chatHistory}
+          chatHistory={conversations}
           onSelectChat={handleSelectChat}
-          className="rounded-tr-2xl flex"
         />
       </div>
       {/* Chat Interface */}
@@ -244,7 +223,9 @@ const ChatPane = ({
 
           <button
             onClick={() => setIsWorkspaceSheetOpen(true)}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
+              isWorkspacePaneVisible ? "" : "hidden"
+            }`}
             aria-label="Toggle workspace"
           >
             <Rows4 size={20} />
@@ -325,32 +306,13 @@ const ChatPane = ({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsNewConversationDialogOpen(false)}
-            >
+            <Button variant="ghost" onClick={handleResetNewConversation}>
               Cancel
             </Button>
             <Button onClick={handleCreateNewConversation}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Mobile Workspace Sheet */}
-      <Sheet open={isWorkspaceSheetOpen} onOpenChange={setIsWorkspaceSheetOpen}>
-        <SheetContent
-          side="right"
-          className="sm:w-[350px] p-0 border-l w-[85vw] max-w-[400px]"
-        >
-          <SheetHeader className="p-4 flex justify-end border-b">
-            <SheetClose className="rounded-full p-2 hover:bg-gray-100">
-              <X size={20} />
-            </SheetClose>
-          </SheetHeader>
-          <div className="h-full overflow-hidden">
-            <WorkspacePane />
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 };

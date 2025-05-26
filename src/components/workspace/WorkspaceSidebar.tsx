@@ -3,38 +3,46 @@ import { AnimatePresence } from "framer-motion";
 import LifestyleMappingCard from "./LifestyleMappingCard";
 import CompsAnalyticsCard from "./CompsAnalyticsCard";
 import ListingDescriptionCard from "./ListingDescriptionCard";
-
-export type WorkspaceFeature =
-  | "lifestyleMapping"
-  | "compsAnalytics"
-  | "propertyDetails"
-  | "none";
+import {
+  isLifeStyleMapResult,
+  isMLSSearchResult,
+  isRealtimeMarketPulseResult,
+  isFamilyExpensesResult,
+  isWebSearchResult,
+  isPropertyListingResponse,
+  TChatToolResult,
+} from "@/lib/apiUtils";
+import RealtimeMarketPulseCard from "./RealtimeMarketPulseCard";
+import VisualMarketDataCard from "./VisualMarketDataCard";
 
 interface WorkspaceSidebarProps {
-  activeFeature?: WorkspaceFeature;
   isVisible?: boolean;
+  toolResult?: TChatToolResult;
 }
 
 const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
-  activeFeature = "lifestyleMapping",
   isVisible = true,
+  toolResult,
 }) => {
-  if (!isVisible) return null;
-
+  if (!isVisible || !toolResult) return null;
+  console.log(toolResult);
   return (
-    <div className="h-full w-full overflow-hidden rounded-tl-xl sm:rounded-tl-2xl shadow-none bg-[#fbfbfb]">
+    <div className="h-full w-full overflow-hidden rounded-tl-xl sm:rounded-tl-2xl shadow-none bg-[#050404]">
       <AnimatePresence mode="wait">
-        {activeFeature === "lifestyleMapping" && (
-          <LifestyleMappingCard isVisible={true} />
+        {isLifeStyleMapResult(toolResult) && (
+          <LifestyleMappingCard lifestyleMapResult={toolResult} />
         )}
-        {activeFeature === "compsAnalytics" && (
-          <CompsAnalyticsCard isVisible={true} />
+        {isMLSSearchResult(toolResult) && (
+          <CompsAnalyticsCard mlsSearchResult={toolResult} />
         )}
-        {activeFeature === "propertyDetails" && (
-          <div className="p-4">Property Details content will go here</div>
+        {isPropertyListingResponse(toolResult) && (
+          <ListingDescriptionCard propertyListingResponse={toolResult} />
         )}
-        {activeFeature === "listingDescription" && (
-          <ListingDescriptionCard isVisible={true} />
+        {isRealtimeMarketPulseResult(toolResult) && (
+          <RealtimeMarketPulseCard realtimeMarketPulseResult={toolResult} />
+        )}
+        {isFamilyExpensesResult(toolResult) && (
+          <VisualMarketDataCard familyExpensesResult={toolResult} />
         )}
       </AnimatePresence>
     </div>
