@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import Header from "./Header";
 import ChatPane, { Message } from "./ChatPane";
 import WorkspacePane from "./WorkspacePane";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,12 +24,21 @@ const Home = () => {
     setIsWorkspacePaneVisible,
   } = useContext(WorkspacePaneContext);
 
-  const { data, refetch: refetchChatHistory } = useGetChatHistory({
-    queryParams: removeUndefinedParams({
-      userId,
-      topicId,
-    }),
-  });
+  const {
+    data,
+    refetch: refetchChatHistory,
+    isLoading: isChatHistoryLoading,
+  } = useGetChatHistory(
+    {
+      queryParams: removeUndefinedParams({
+        userId,
+        topicId,
+      }),
+    },
+    {
+      enabled: !!topicId,
+    }
+  );
 
   const { mutateAsync: postMessage } = useChat();
 
@@ -102,12 +110,6 @@ const Home = () => {
     refetchChatHistory();
   };
 
-  const quickActions = [
-    "Search Available Properties",
-    "Generate Market Analysis",
-    "Request Property Valuation",
-  ];
-
   // Use useEffect to handle resize events and adjust height
   React.useEffect(() => {
     const updateHeight = () => {
@@ -151,9 +153,10 @@ const Home = () => {
           }] h-full`}
         >
           <ChatPane
+            topicId={topicId}
             messages={messages}
-            quickActions={quickActions}
             onSendMessage={handleSendMessage}
+            isLoading={isChatHistoryLoading}
           />
         </div>
 

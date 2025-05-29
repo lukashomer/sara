@@ -53,7 +53,7 @@ type Props = {
 
 const GoogleMap: React.FC<Props> = ({ coordinates, points, colors }) => {
   return (
-    <div className="relative h-[200px] sm:h-[250px] md:h-[300px]">
+    <div className="flex-shrink-0 relative h-[200px] sm:h-[250px] md:h-[300px]">
       {!coordinates ? (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
           <p className="text-gray-500">No location data available</p>

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatHistoryItem {
   id: string;
@@ -31,10 +32,15 @@ interface ChatHistoryItem {
   lastMessage: string;
   timestamp: Date;
   unread?: boolean;
+  searchValue?: string;
+  onSearch?: (value: string) => void;
+  isSearchLoading?: boolean;
 }
 
 interface ChatHistorySidebarProps {
   isOpen: boolean;
+  searchValue?: string;
+  onSearch: (value: string) => void;
   onClose: () => void;
   onNewChat: () => void;
   chatHistory?: ChatHistoryItem[];
@@ -43,26 +49,17 @@ interface ChatHistorySidebarProps {
 
 const ChatHistorySidebar = ({
   isOpen,
+  searchValue,
+  onSearch,
   onClose,
   onNewChat,
   chatHistory = [],
   onSelectChat = () => {},
 }: ChatHistorySidebarProps) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
+  const { logout, user } = useAuth();
 
-  useEffect(() => {
-    const auth = localStorage.getItem("isAuthenticated");
-    setIsAuthenticated(auth === "true");
-  }, []);
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    setIsAuthenticated(false);
-    navigate("/login");
-  };
-
-  const handleLogin = () => {
-    navigate("/login");
+    logout;
   };
 
   const formatTime = (date: Date) => {
@@ -84,7 +81,7 @@ const ChatHistorySidebar = ({
       className={
         cn(
           "flex flex-col w-[80%] sm:w-[70%] md:w-72 h-full shadow-md transition-all duration-300 ease-in-out",
-          isOpen ? "opacity-100" : "translate-x-[-100%] opacity-0",
+          isOpen ? "opacity-100" : "translate-x-[-100%] opacity-0"
         ) + " bg-[#f9f9f9]  rounded-tr-2xl"
       }
     >
@@ -105,6 +102,8 @@ const ChatHistorySidebar = ({
       <div className="sm:px-3 md:px-4 md:pb-3 pb-[3] pt-4 pb-[3] px-4">
         <div className="relative bg-transparent">
           <input
+            value={searchValue}
+            onChange={(e) => onSearch(e.target.value)}
             type="text"
             placeholder="Search conversations..."
             className="w-full py-1.5 md:py-2 px-2 md:px-3 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary h-10 sm:h-12 rounded-lg sm:rounded-xl bg-white shadow-sm"
@@ -155,14 +154,14 @@ const ChatHistorySidebar = ({
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-gray-100 p-1.5 md:p-2 rounded-[18px]">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs md:text-sm">
-                <span>JD</span>
+                <span>{user.name.charAt(0)}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs md:text-sm font-medium truncate">
-                  John Doe
+                  {user.name}
                 </p>
                 <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 truncate">
-                  john@example.com
+                  {user.email}
                 </p>
               </div>
             </div>
@@ -171,35 +170,23 @@ const ChatHistorySidebar = ({
             align="start"
             className="w-44 sm:w-48 md:w-56 p-1"
           >
-            {isAuthenticated ? (
-              <>
-                <DropdownMenuItem className="cursor-pointer py-1.5 sm:py-2 md:py-2.5 text-xs md:text-sm h-9 sm:h-10 md:h-11">
-                  <Link to="/" className="w-full flex items-center">
-                    <UserRound className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                    <span>My Account</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer py-1.5 sm:py-2 md:py-2.5 text-xs md:text-sm h-9 sm:h-10 md:h-11"
-                  onClick={handleLogout}
-                >
-                  <div className="w-full flex items-center">
-                    <LogOut className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                    <span>Logout</span>
-                  </div>
-                </DropdownMenuItem>
-              </>
-            ) : (
+            <>
+              <DropdownMenuItem className="cursor-pointer py-1.5 sm:py-2 md:py-2.5 text-xs md:text-sm h-9 sm:h-10 md:h-11">
+                <Link to="/" className="w-full flex items-center">
+                  <UserRound className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <span>My Account</span>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer py-1.5 sm:py-2 md:py-2.5 text-xs md:text-sm h-9 sm:h-10 md:h-11"
-                onClick={handleLogin}
+                onClick={handleLogout}
               >
                 <div className="w-full flex items-center">
-                  <LogIn className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                  <span>Login</span>
+                  <LogOut className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <span>Logout</span>
                 </div>
               </DropdownMenuItem>
-            )}
+            </>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer py-1.5 sm:py-2 md:py-2.5 text-xs md:text-sm h-9 sm:h-10 md:h-11">
               <Settings2 className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />

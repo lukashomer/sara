@@ -12,6 +12,7 @@ interface ChatInputProps {
   onQuickActionClick: (action: QuickAction) => void;
   isLoading?: boolean;
   quickActions?: QuickAction[];
+  onFocusMessage?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 const ChatInput = ({
@@ -23,6 +24,7 @@ const ChatInput = ({
     { id: "market", label: "Generate Market Analysis" },
     { id: "valuation", label: "Request Property Valuation" },
   ],
+  onFocusMessage,
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
 
@@ -54,6 +56,7 @@ const ChatInput = ({
         <div className="flex flex-col w-full max-w-[100vw] bg-secondary chat-input-shadow rounded-xl sm:rounded-2xl overflow-hidden">
           <div className="relative w-full">
             <input
+              onFocus={onFocusMessage}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="What are you looking for?"

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -18,7 +19,7 @@ const MessageList = ({ messages, isLoading = false }: MessageListProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {  
+    if (scrollAreaRef.current) {
       // scroll to bottom
       scrollAreaRef.current.scrollTo({
         top: scrollAreaRef.current.scrollHeight,
@@ -52,7 +53,42 @@ const MessageList = ({ messages, isLoading = false }: MessageListProps) => {
               <div
                 className={`rounded-lg p-3 sm:p-4 text-sm sm:text-base break-words max-w-[100%] overflow-hidden shadow-sm ${message.sender === "user" ? "bg-brand-blue text-white" : "bg-secondary text-foreground"}`}
               >
-                {message.content}
+                <ReactMarkdown
+                  components={{
+                    // Style links to be visible in both light and dark themes
+                    a: ({ node, ...props }) => (
+                      <a
+                        {...props}
+                        className="text-blue-500 hover:text-blue-600 underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    ),
+                    // Style lists
+                    ul: ({ node, ...props }) => (
+                      <ul {...props} className="list-disc pl-4 space-y-1" />
+                    ),
+                    ol: ({ node, ...props }) => (
+                      <ol {...props} className="list-decimal pl-4 space-y-1" />
+                    ),
+                    // Style headers
+                    h1: ({ node, ...props }) => (
+                      <h1 {...props} className="text-2xl font-bold mb-2" />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2 {...props} className="text-xl font-bold mb-2" />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3 {...props} className="text-lg font-bold mb-2" />
+                    ),
+                    // Style paragraphs
+                    p: ({ node, ...props }) => (
+                      <p {...props} className="mb-2" />
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
               </div>
             </div>
           </div>

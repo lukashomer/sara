@@ -14,6 +14,7 @@ import {
 } from "@/lib/apiUtils";
 import RealtimeMarketPulseCard from "./RealtimeMarketPulseCard";
 import VisualMarketDataCard from "./VisualMarketDataCard";
+import WebSearchCard from "./WebSearchCard";
 
 interface WorkspaceSidebarProps {
   isVisible?: boolean;
@@ -43,6 +44,9 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
         )}
         {isFamilyExpensesResult(toolResult) && (
           <VisualMarketDataCard familyExpensesResult={toolResult} />
+        )}
+        {isWebSearchResult(toolResult) && (
+          <WebSearchCard webSearchResult={toolResult} />
         )}
       </AnimatePresence>
     </div>

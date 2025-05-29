@@ -1,14 +1,7 @@
 import React, { useContext, useMemo } from "react";
 import { WorkspacePaneContext } from "../App";
 import WorkspaceSidebar from "./workspace/WorkspaceSidebar";
-import { WorkspaceFeature } from "./workspace/WorkspaceSidebar";
-import {
-  isMLSSearchResult,
-  isRealtimeMarketPulseResult,
-  isFamilyExpensesResult,
-  isWebSearchResult,
-  TChatToolResult,
-} from "@/lib/apiUtils";
+import { TChatToolResult } from "@/lib/apiUtils";
 
 interface WorkspacePaneProps {
   title?: string;
@@ -18,13 +11,6 @@ interface WorkspacePaneProps {
 
 const WorkspacePane: React.FC<WorkspacePaneProps> = ({ toolResult }) => {
   const { isWorkspacePaneVisible } = useContext(WorkspacePaneContext);
-
-  const activeFeature: WorkspaceFeature | undefined = useMemo(() => {
-    if (isWebSearchResult(toolResult)) {
-      return "webSearch";
-    }
-    return undefined;
-  }, [toolResult]);
 
   return (
     <div

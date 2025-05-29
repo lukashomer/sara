@@ -15,25 +15,9 @@ import { Badge } from "@/components/ui/cup-badge";
 import { Card, CardContent } from "@/components/ui/cup-card";
 import { motion } from "framer-motion";
 import { LifestyleMapResult } from "@/api/saraSchemas";
-import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 import { capitalize, decapitalize } from "@/lib/utils";
 import { COLORS } from "@/lib/themeUtils";
 import GoogleMap from "../GoogleMap";
-
-const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-// Update the libraries array to include the new marker library
-const GOOGLE_MAPS_LIBRARIES: ("marker" | "places")[] = ["marker", "places"];
-
-interface MapPoint {
-  id: string;
-  type: string;
-  name: string;
-  address: string;
-  distance: string;
-  icon: string;
-  coordinates: [number, number]; // [latitude, longitude]
-}
 
 interface LifestyleMappingCardProps {
   title?: string;
@@ -61,34 +45,6 @@ const getIconForType = (type: string) => {
   }
 
   return <MapPin className="h-4 w-4" />;
-};
-
-// Add this helper function to create custom marker icons
-const createCustomMarkerIcon = (category: string, iconColor: string) => {
-  const iconSize = 30;
-  const iconText = category.charAt(0).toUpperCase();
-
-  // Create an SVG string with the circle and icon
-  const svg = `
-    <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 ${iconSize} ${iconSize}" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${iconSize / 2}" cy="${iconSize / 2}" r="${iconSize / 2}" fill="${iconColor}"/>
-      <text 
-        x="50%" 
-        y="50%" 
-        text-anchor="middle" 
-        dominant-baseline="middle" 
-        fill="white" 
-        font-size="14" 
-        font-weight="bold"
-      >
-        ${iconText}
-      </text>
-    </svg>
-  `;
-
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-  };
 };
 
 const LifestyleMappingCard: React.FC<LifestyleMappingCardProps> = ({
@@ -159,7 +115,7 @@ const LifestyleMappingCard: React.FC<LifestyleMappingCardProps> = ({
           <h1 className="text-lg sm:text-xl font-semibold text-gray-900 line-clamp-1">
             {title}
           </h1>
-          <div className="flex flex-wrap gap-3 ml-auto">
+          <div className="flex flex-wrap gap-3">
             <Button
               variant="highlight"
               size="sm"
@@ -182,79 +138,81 @@ const LifestyleMappingCard: React.FC<LifestyleMappingCardProps> = ({
         </div>
         <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
-      {/* Filter Pills */}
-      <div className="p-4 border-b overflow-x-auto no-scrollbar">
-        <div className="flex gap-3 flex-nowrap min-w-max">
-          {filters.map((filter) => (
-            <Badge
-              key={filter}
-              variant={activeFilter === filter ? "default" : "outline"}
-              className={
-                `cursor-pointer rounded-full px-4 py-2 ${activeFilter === filter ? "bg-brand-blue text-white" : "bg-white text-gray-700 border-gray-300"}` +
-                " text-sm font-medium "
-              }
-              onClick={() => setActiveFilter(filter)}
-            >
-              {filter}
-            </Badge>
-          ))}
+      <div className="flex flex-col flex-1 overflow-y-auto scroll-container gap-4">
+        {/* Filter Pills */}
+        <div className="p-4 border-b overflow-x-auto no-scrollbar flex-shrink-0">
+          <div className="flex gap-3 flex-nowrap min-w-max">
+            {filters.map((filter) => (
+              <Badge
+                key={filter}
+                variant={activeFilter === filter ? "default" : "outline"}
+                className={
+                  `cursor-pointer rounded-full px-4 py-2 ${activeFilter === filter ? "bg-brand-blue text-white" : "bg-white text-gray-700 border-gray-300"}` +
+                  " text-sm font-medium "
+                }
+                onClick={() => setActiveFilter(filter)}
+              >
+                {filter}
+              </Badge>
+            ))}
+          </div>
         </div>
-      </div>
-      {/* Map Container */}
-      <GoogleMap
-        coordinates={coordinates}
-        points={mapPoints}
-        colors={filtersColors}
-      />
-      {/* Points of Interest List */}
-      <div className="flex-1 overflow-y-auto p-4 scroll-container">
-        <h3 className="text-sm font-medium mb-3">
-          {activeFilter === "All"
-            ? "All Points of Interest"
-            : `${activeFilter} Locations`}{" "}
-          ({filteredMapData.length})
-        </h3>
-        <div className="space-y-3">
-          {filteredMapData.map((point, index) => (
-            <Card
-              key={`${point.name}-${index}`}
-              className="overflow-hidden bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <CardContent className="p-3 flex items-start gap-3">
-                <div className="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
-                  {getIconForType(point.category)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium line-clamp-1">
-                    {point.name}
-                  </h4>
-                  <p className="text-xs text-gray-500 line-clamp-1">
-                    <a
-                      href={point.place_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {point.address}
-                    </a>
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] px-1.5 py-0.5 bg-secondary-light"
-                    >
-                      {point.distance_km}
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0.5 border-gray-200"
-                    >
-                      {capitalize(point.category)}
-                    </Badge>
+        {/* Map Container */}
+        <GoogleMap
+          coordinates={coordinates}
+          points={mapPoints}
+          colors={filtersColors}
+        />
+        {/* Points of Interest List */}
+        <div className="flex-1 p-4">
+          <h3 className="text-sm font-medium mb-3">
+            {activeFilter === "All"
+              ? "All Points of Interest"
+              : `${activeFilter} Locations`}{" "}
+            ({filteredMapData.length})
+          </h3>
+          <div className="space-y-3">
+            {filteredMapData.map((point, index) => (
+              <Card
+                key={`${point.name}-${index}`}
+                className="overflow-hidden bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <CardContent className="p-3 flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+                    {getIconForType(point.category)}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium line-clamp-1">
+                      {point.name}
+                    </h4>
+                    <p className="text-xs text-gray-500 line-clamp-1">
+                      <a
+                        href={point.place_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {point.address}
+                      </a>
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] px-1.5 py-0.5 bg-secondary-light"
+                      >
+                        {point.distance_km}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0.5 border-gray-200"
+                      >
+                        {capitalize(point.category)}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>

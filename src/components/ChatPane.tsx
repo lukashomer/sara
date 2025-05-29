@@ -27,6 +27,7 @@ import WorkspacePane from "./WorkspacePane";
 import {
   useCreateConversation,
   useGetUserConversations,
+  useSearchChatHistory,
 } from "@/api/saraComponents";
 import { CreateConversationRequest } from "@/api/saraSchemas";
 import { WorkspacePaneContext } from "@/App";
@@ -42,6 +43,7 @@ export interface Message {
 
 interface ChatHistory {
   id: string;
+  topicId: string;
   title: string;
   lastMessage: string;
   timestamp: Date;
@@ -54,6 +56,7 @@ interface QuickAction {
 }
 
 interface ChatPaneProps {
+  topicId?: string;
   messages?: Message[];
   onSendMessage?: (message: string) => void;
   onQuickActionClick?: (action: QuickAction) => void;
@@ -61,6 +64,7 @@ interface ChatPaneProps {
 }
 
 const ChatPane = ({
+  topicId,
   messages = [],
   onSendMessage = () => {},
   onQuickActionClick = () => {},
@@ -76,6 +80,26 @@ const ChatPane = ({
   const [clientName, setClientName] = useState("");
   const [purpose, setPurpose] = useState("");
   const [comment, setComment] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+
+  useEffect(() => {
+    setSearchValue("");
+  }, [isHistorySidebarOpen]);
+
+  const isSearchEnabled =
+    !!searchValue && searchValue.length > 2 && isHistorySidebarOpen;
+
+  const { data: searchChatHistoryData } = useSearchChatHistory(
+    {
+      queryParams: {
+        query: searchValue,
+        limit: 50,
+      },
+    },
+    {
+      enabled: isSearchEnabled,
+    }
+  );
 
   const quickActions: QuickAction[] = [
     { id: "search", label: "Search Available Properties" },
@@ -88,13 +112,26 @@ const ChatPane = ({
   const { data, refetch: refetchConversations } = useGetUserConversations({});
 
   const initialConversations: ChatHistory[] = useMemo(() => {
+    if (isSearchEnabled) {
+      return (
+        searchChatHistoryData?.matches.map((match) => ({
+          id: `${match.topic_id}-${match.message_id}`,
+          topicId: match.topic_id,
+          title: match.title,
+          lastMessage: match.preview,
+          timestamp: new Date(match.created_at),
+        })) || []
+      );
+    }
+
     return data?.conversations?.map((conversation) => ({
       id: conversation.topic_id,
+      topicId: conversation.topic_id,
       title: conversation.title,
       lastMessage: conversation.preview,
       timestamp: new Date(conversation.updated_at),
     }));
-  }, [data]);
+  }, [data, isSearchEnabled, searchChatHistoryData]);
 
   const [conversations, setConversations] =
     useState<ChatHistory[]>(initialConversations);
@@ -136,9 +173,11 @@ const ChatPane = ({
       ? `${clientName}: ${purposeLabel}`
       : purposeLabel || "New Conversation";
 
+    const mockId = `new-${Date.now()}`;
     const newChat = {
-      id: `new-${Date.now()}`,
+      id: mockId,
       title,
+      topicId: mockId,
       lastMessage: comment || "Conversation started",
       timestamp: new Date(),
       unread: false,
@@ -164,6 +203,14 @@ const ChatPane = ({
     navigate(`/${res.topic_id}`);
   };
 
+  const onFocusMessage = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!topicId) {
+      setIsNewConversationDialogOpen(true);
+      e.preventDefault();
+      return;
+    }
+  };
+
   const handleSelectChat = (chatId: string) => {
     // Handle selecting a chat from history
     setIsHistorySidebarOpen(false);
@@ -178,6 +225,10 @@ const ChatPane = ({
       );
       navigate(`/${chatId}`);
     }
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
   };
 
   return (
@@ -201,6 +252,8 @@ const ChatPane = ({
           onNewChat={handleNewChat}
           chatHistory={conversations}
           onSelectChat={handleSelectChat}
+          onSearch={handleSearch}
+          searchValue={searchValue}
         />
       </div>
       {/* Chat Interface */}
@@ -217,7 +270,11 @@ const ChatPane = ({
 
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center">
-              <span className="text-xl font-bold text-primary">Tempo</span>
+              <img
+                src="https://i0.wp.com/www.reso.org/wp-content/uploads/2020/05/Douglas-Elliman-Logo.png?fit=1024%2C194&ssl=1"
+                alt="Douglas Elliman Logo"
+                className="h-8"
+              />
             </Link>
           </div>
 
@@ -240,6 +297,7 @@ const ChatPane = ({
           onQuickActionClick={onQuickActionClick}
           isLoading={isLoading}
           quickActions={quickActions}
+          onFocusMessage={onFocusMessage}
         />
       </div>
       {/* New Conversation Dialog */}

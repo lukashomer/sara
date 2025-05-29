@@ -107,66 +107,68 @@ const CompsAnalyticsCard: React.FC<CompsAnalyticsCardProps> = ({
         </div>
         <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
-      {/* Source Property */}
-      {!!sourceProperty && (
-        <div className="p-4 border-b">
-          <h3 className="text-sm font-medium mb-3">Source Property</h3>
-          <div className="bg-white rounded-lg shadow-sm p-3 flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
-              <Home className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium line-clamp-1">
-                {sourceProperty.title}
-              </h4>
-              <p className="text-xs text-gray-500 line-clamp-1">
-                {sourceProperty.address}
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] px-1.5 py-0.5 bg-secondary-light"
-                >
-                  ${sourceProperty.price.toLocaleString()}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="text-[10px] px-1.5 py-0.5 border-gray-200"
-                >
-                  {sourceProperty.type}
-                </Badge>
+      <div className="flex flex-col flex-1 overflow-y-auto scroll-container gap-4">
+        {/* Source Property */}
+        {!!sourceProperty && (
+          <div className="p-4 border-b">
+            <h3 className="text-sm font-medium mb-3">Source Property</h3>
+            <div className="bg-white rounded-lg shadow-sm p-3 flex items-start gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+                <Home className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-medium line-clamp-1">
+                  {sourceProperty.title}
+                </h4>
+                <p className="text-xs text-gray-500 line-clamp-1">
+                  {sourceProperty.address}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0.5 bg-secondary-light"
+                  >
+                    ${sourceProperty.price.toLocaleString()}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0.5 border-gray-200"
+                  >
+                    {sourceProperty.type}
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      {/* Map Container */}
-      <GoogleMap
-        coordinates={sourceProperty?.coordinates}
-        points={mapPoints}
-        colors={{ housing: COLORS_MAP.red }}
-      />
-      {/* Comparable Properties List */}
-      <div className="flex-1 overflow-y-auto p-4 scroll-container">
-        <h3 className="text-sm font-medium mb-3">
-          {activeFilter === "All"
-            ? "All Comparable Properties"
-            : `${activeFilter} Properties`}{" "}
-          ({comps.length})
-        </h3>
-        <div className="space-y-4">
-          {comps.map((comp) => (
-            <div className="h-3/5" key={comp.id}>
-              <ResultCard
-                key={comp.id}
-                title={comp.title}
-                address={comp.address}
-                category={comp.type}
-                imageUrl={comp.imageUrl}
-                onView={onPreviewProperty(comp)}
-              />
-            </div>
-          ))}
+        )}
+        {/* Map Container */}
+        <GoogleMap
+          coordinates={sourceProperty?.coordinates}
+          points={mapPoints}
+          colors={{ housing: COLORS_MAP.red }}
+        />
+        {/* Comparable Properties List */}
+        <div className="flex-1 p-4">
+          <h3 className="text-sm font-medium mb-3">
+            {activeFilter === "All"
+              ? "All Comparable Properties"
+              : `${activeFilter} Properties`}{" "}
+            ({comps.length})
+          </h3>
+          <div className="space-y-4">
+            {comps.map((comp) => (
+              <div className="h-3/5" key={comp.id}>
+                <ResultCard
+                  key={comp.id}
+                  title={comp.title}
+                  address={comp.address}
+                  category={comp.type}
+                  imageUrl={comp.imageUrl}
+                  onView={onPreviewProperty(comp)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>
