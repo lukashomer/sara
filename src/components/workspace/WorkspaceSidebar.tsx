@@ -26,7 +26,7 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
   toolResult,
 }) => {
   if (!isVisible || !toolResult) return null;
-  console.log(toolResult);
+
   return (
     <div className="h-full w-full overflow-hidden rounded-tl-xl sm:rounded-tl-2xl shadow-none bg-[#050404]">
       <AnimatePresence mode="wait">

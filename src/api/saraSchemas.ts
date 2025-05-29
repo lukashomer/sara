@@ -859,6 +859,14 @@ export type SearchChatResponse = {
      */
     title?: string;
     /**
+     * Purpose of the conversation (Property Search, Market Analysis, etc.)
+     */
+    purpose?: string;
+    /**
+     * Additional comment about the conversation
+     */
+    comment?: string;
+    /**
      * Type of match: topic_or_title or content
      */
     match_type?: "topic_or_title" | "content";
@@ -871,15 +879,15 @@ export type SearchChatResponse = {
      */
     preview?: string;
     /**
+     * Role of the message sender (only for content matches)
+     */
+    role?: "user" | "assistant" | "system" | "tool";
+    /**
      * Creation timestamp
      *
      * @format date-time
      */
     created_at?: string;
-    /**
-     * Role of the message sender (only for content matches)
-     */
-    role?: "user" | "assistant" | "system" | "tool";
   }[];
 };
 

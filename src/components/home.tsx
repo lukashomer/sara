@@ -1,117 +1,21 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import ChatPane, { Message } from "./ChatPane";
-import WorkspacePane from "./WorkspacePane";
-import { useAuth } from "@/contexts/AuthContext";
-import { useChat, useGetChatHistory } from "@/api/saraComponents";
-import { removeUndefinedParams } from "@/lib/utils";
-import { isMultipleTopics, transformChatMessage } from "@/lib/apiUtils";
-import { Sheet, SheetContent, SheetHeader, SheetClose } from "./ui/sheet";
-import { X } from "lucide-react";
+import { useContext, useEffect } from "react";
 import { WorkspacePaneContext } from "@/App";
-
-// Component interfaces moved to their respective component files
+import Layout from "./Layout";
+import { Link } from "react-router-dom";
+import { PanelLeft } from "lucide-react";
 
 const Home = () => {
-  const { topicId } = useParams();
-  const {
-    user: { id: userId },
-  } = useAuth();
-  const {
-    isWorkspaceSheetOpen,
-    setIsWorkspaceSheetOpen,
-    isWorkspacePaneVisible,
-    setIsWorkspacePaneVisible,
-  } = useContext(WorkspacePaneContext);
+  const { setIsNewConversationDialogOpen, toggleHistorySidebar } =
+    useContext(WorkspacePaneContext);
 
-  const {
-    data,
-    refetch: refetchChatHistory,
-    isLoading: isChatHistoryLoading,
-  } = useGetChatHistory(
-    {
-      queryParams: removeUndefinedParams({
-        userId,
-        topicId,
-      }),
-    },
-    {
-      enabled: !!topicId,
-    }
-  );
-
-  const { mutateAsync: postMessage } = useChat();
-
-  const initialMessages: Message[] | undefined = useMemo(() => {
-    if (isMultipleTopics(data)) {
-      return undefined;
-    }
-    return data?.messages?.map(transformChatMessage);
-  }, [data]);
-
-  const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
-
-  // Sync messages with useGetChatHistory query
-  useEffect(() => {
-    setMessages(initialMessages ?? []);
-  }, [initialMessages]);
-
-  // extract last message and its tool results
-  const { lastMessageToolResult, lastUserMessage } = useMemo(() => {
-    const lastMessage = messages[messages.length - 1];
-    // get last user message
-    const lastUserMessage = messages.findLast(
-      (message) => message.sender === "user"
-    );
-
-    return {
-      lastUserMessage,
-      lastMessageToolResult: lastMessage?.toolResults?.[0]?.result,
-    };
-  }, [messages]);
-
-  useEffect(() => {
-    setIsWorkspacePaneVisible(!!lastMessageToolResult);
-  }, [lastMessageToolResult]);
-
-  const [workspaceTitle] = React.useState("Your workspace");
-  const [workspaceSubtitle] = React.useState("Lifestyle Map for a family of 5");
-
-  const handleSendMessage = async (message: string) => {
-    // Add user message
-    const newUserMessage = {
-      id: Date.now().toString(),
-      sender: "user" as const,
-      content: message,
-      timestamp: new Date(),
-    };
-    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
-    // API call
-    const response = await postMessage({
-      body: removeUndefinedParams({
-        topicId,
-        message,
-        userId,
-      }),
-    });
-    // Add response to messages
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        id: Date.now().toString(),
-        sender: "ai" as const,
-        content: response.message ?? "",
-        timestamp: new Date(),
-        toolCalls: response.tool_calls,
-        toolResults: response.tool_results,
-      },
-    ]);
-    // Invalidate chat-history query
-    refetchChatHistory();
+  // Handler for input focus
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setIsNewConversationDialogOpen(true);
   };
 
   // Use useEffect to handle resize events and adjust height
-  React.useEffect(() => {
+  useEffect(() => {
     const updateHeight = () => {
       const headerHeight = 64; // 16 * 4 = 64px (h-16)
       const vh = window.innerHeight;
@@ -146,52 +50,56 @@ const Home = () => {
       </header>
       {/* Main Content */}
       <div className="flex h-[var(--content-height)] overflow-hidden">
-        {/* Chat Pane (Left) */}
-        <div
-          className={`w-full md:w-[${
-            isWorkspacePaneVisible ? "65%" : "100%"
-          }] h-full`}
-        >
-          <ChatPane
-            topicId={topicId}
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            isLoading={isChatHistoryLoading}
-          />
-        </div>
+        <div className={`w-full md:w-[100%] h-full`}>
+          <Layout>
+            <div className="flex flex-col flex-1 h-full">
+              <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+                <button
+                  onClick={toggleHistorySidebar}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Toggle chat history"
+                >
+                  <PanelLeft size={20} />
+                </button>
 
-        {/* Workspace Pane (Right) */}
-        <div
-          className={`hidden md:block md:w-[${
-            isWorkspacePaneVisible ? "35%" : "0%"
-          }] h-full`}
-        >
-          <WorkspacePane
-            title={workspaceTitle}
-            subtitle={workspaceSubtitle}
-            toolResult={lastMessageToolResult}
-          />
-        </div>
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                  <Link to="/" className="flex items-center">
+                    <img
+                      src="https://i0.wp.com/www.reso.org/wp-content/uploads/2020/05/Douglas-Elliman-Logo.png?fit=1024%2C194&ssl=1"
+                      alt="Douglas Elliman Logo"
+                      className="h-8"
+                    />
+                  </Link>
+                </div>
+              </div>
 
-        {/* Mobile Workspace Sheet */}
-        <Sheet
-          open={isWorkspaceSheetOpen}
-          onOpenChange={setIsWorkspaceSheetOpen}
-        >
-          <SheetContent
-            side="right"
-            className="sm:w-[350px] p-0 border-l w-[85vw] max-w-[400px]"
-          >
-            <SheetHeader className="p-4 flex justify-end border-b">
-              <SheetClose className="rounded-full p-2 hover:bg-gray-100">
-                <X size={20} />
-              </SheetClose>
-            </SheetHeader>
-            <div className="h-full overflow-hidden">
-              <WorkspacePane toolResult={lastMessageToolResult} />
+              <div className="flex flex-col items-center justify-center min-h-screen w-full px-4 sm:px-6">
+                <h1 className="font-normal text-2xl sm:text-3xl md:text-4xl mb-4 sm:mb-8 text-center">
+                  How can I assist you today?
+                </h1>
+                <div className="bg-[#f8f8f8] rounded-2xl shadow-md px-4 sm:px-6 md:px-8 py-0 w-full max-w-[600px] flex flex-col">
+                  <div className="flex flex-1 justify-start w-full py-3 sm:py-4">
+                    <input
+                      type="text"
+                      placeholder="What are you looking for?"
+                      onFocus={handleInputFocus}
+                      className="border-none outline-none bg-transparent text-base sm:text-lg py-3 sm:py-4 w-full"
+                    />
+                  </div>
+                  <div className="flex justify-end w-full pb-3 sm:pb-4">
+                    <button
+                      className="bg-primary transition-colors text-white rounded-full w-12 h-12 sm:w-10 sm:h-10 flex items-center justify-center ml-4 sm:ml-6 text-xl"
+                      tabIndex={-1}
+                      aria-label="Send"
+                    >
+                      ↑
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </SheetContent>
-        </Sheet>
+          </Layout>
+        </div>
       </div>
     </div>
   );

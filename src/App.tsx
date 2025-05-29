@@ -1,11 +1,12 @@
 import React, { Suspense, useState } from "react";
 import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./components/home";
+import Chat from "./components/Chat";
 import LoginPage from "./components/LoginPage";
 import AuthGuard from "./components/AuthGuard";
 import routes from "tempo-routes";
 import { AuthProvider } from "./contexts/AuthContext";
 import ReactQueryProvider from "./contexts/ReactQueryContext";
+import Home from "./components/home";
 
 export const WorkspacePaneContext = React.createContext({
   isWorkspacePaneVisible: true,
@@ -13,14 +14,26 @@ export const WorkspacePaneContext = React.createContext({
   toggleWorkspacePane: () => {},
   isWorkspaceSheetOpen: false,
   setIsWorkspaceSheetOpen: (open: boolean) => {},
+  isHistorySidebarOpen: false,
+  setIsHistorySidebarOpen: (open: boolean) => {},
+  toggleHistorySidebar: () => {},
+  isNewConversationDialogOpen: false,
+  setIsNewConversationDialogOpen: (open: boolean) => {},
 });
 
 function App() {
   const [isWorkspacePaneVisible, setIsWorkspacePaneVisible] = useState(true);
   const [isWorkspaceSheetOpen, setIsWorkspaceSheetOpen] = useState(false);
+  const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
+  const [isNewConversationDialogOpen, setIsNewConversationDialogOpen] =
+    useState(false);
 
   const toggleWorkspacePane = () => {
     setIsWorkspacePaneVisible((prev) => !prev);
+  };
+
+  const toggleHistorySidebar = () => {
+    setIsHistorySidebarOpen((prev) => !prev);
   };
 
   return (
@@ -33,6 +46,11 @@ function App() {
             toggleWorkspacePane,
             isWorkspaceSheetOpen,
             setIsWorkspaceSheetOpen,
+            isHistorySidebarOpen,
+            setIsHistorySidebarOpen,
+            toggleHistorySidebar,
+            isNewConversationDialogOpen,
+            setIsNewConversationDialogOpen,
           }}
         >
           <Suspense fallback={<p>Loading...</p>}>
@@ -46,10 +64,18 @@ function App() {
                 }
               />
               <Route
-                path="/:topicId?"
+                path="/"
                 element={
                   <AuthGuard>
                     <Home />
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/chat/:topicId?"
+                element={
+                  <AuthGuard>
+                    <Chat />
                   </AuthGuard>
                 }
               />
